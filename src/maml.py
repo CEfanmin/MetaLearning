@@ -3,14 +3,8 @@ from __future__ import print_function
 import numpy as np
 import sys
 import tensorflow as tf
-try:
-    import special_grads
-except KeyError as e:
-    print('WARN: Cannot define MaxPoolGrad, likely already defined for this version of tensorflow: %s' % e,
-          file=sys.stderr)
-
 from tensorflow.python.platform import flags
-from utils import mse, xent, conv_block, normalize
+from utils import mse, xent, normalize
 
 FLAGS = flags.FLAGS
 
@@ -33,19 +27,19 @@ class MAML:
     def construct_model(self, input_tensors=None, prefix='metatrain_'):
         # a: training data for inner gradient, b: test data for meta gradient
         if input_tensors is None:
-            self.inputa = tf.placeholder(tf.float32)
-            self.inputb = tf.placeholder(tf.float32)
-            self.labela = tf.placeholder(tf.float32)
-            self.labelb = tf.placeholder(tf.float32)
+            self.inputa = tf.placeholder(tf.float32, name="inputa")
+            self.inputb = tf.placeholder(tf.float32, name="inputb")
+            self.labela = tf.placeholder(tf.float32, name="labela")
+            self.labelb = tf.placeholder(tf.float32, name="labelb")
         else:
             self.inputa = input_tensors['inputa']
             self.inputb = input_tensors['inputb']
             self.labela = input_tensors['labela']
             self.labelb = input_tensors['labelb']
 
-        # load pre model weight
         with tf.variable_scope('model', reuse=None) as training_scope:
             if 'weights' in dir(self):
+                # load pre model weight
                 training_scope.reuse_variables()
                 weights = self.weights
             else:
@@ -62,7 +56,7 @@ class MAML:
                 """ Perform gradient descent for one task in the meta-batch. """
                 inputa, inputb, labela, labelb = inp
                 task_outputbs, task_lossesb = [], []
-
+            
                 task_outputa = self.forward(inputa, weights, reuse=reuse)  # only reuse initial weights on the first iter
                 task_lossa = self.loss_func(task_outputa, labela)
 
@@ -74,9 +68,7 @@ class MAML:
                 output = self.forward(inputb, fast_weights, reuse=True)
                 task_outputbs.append(output)
                 task_lossesb.append(self.loss_func(output, labelb))
-                print("outter loop")
                 for j in range(num_updates - 1):
-                    print("task meta-learn j is: ", j)
                     loss = self.loss_func(self.forward(inputa, fast_weights, reuse=True), labela)
                     grads = tf.gradients(loss, list(fast_weights.values()))
                     if FLAGS.stop_grad:
@@ -97,7 +89,6 @@ class MAML:
 
             out_dtype = [tf.float32, [tf.float32]*num_updates, tf.float32, [tf.float32]*num_updates]
             result = tf.map_fn(task_metalearn, elems=(self.inputa, self.inputb, self.labela, self.labelb), dtype=out_dtype, parallel_iterations=FLAGS.meta_batch_size)
-
             outputas, outputbs, lossesa, lossesb  = result
 
         ## Performance & Optimization
