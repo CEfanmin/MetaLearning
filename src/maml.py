@@ -39,16 +39,17 @@ class MAML:
 
         with tf.variable_scope('model', reuse=None) as training_scope:
             if 'weights' in dir(self):
-                # load pre model weight
+                print("load pre model weight...")
                 training_scope.reuse_variables()
                 weights = self.weights
             else:
-                # Re-define the weights
+                print("define the weights...")
                 self.weights = weights = self.construct_weights()
 
             # outputbs[i] and lossesb[i] is the output and loss after i+1 gradient updates
             lossesa, outputas, lossesb, outputbs = [], [], [], []
             num_updates = max(self.test_num_updates, FLAGS.num_updates)
+            print("num_updates is: ", num_updates)
             outputbs = [[]]*num_updates
             lossesb = [[]]*num_updates
 
@@ -68,7 +69,7 @@ class MAML:
                 output = self.forward(inputb, fast_weights, reuse=True)
                 task_outputbs.append(output)
                 task_lossesb.append(self.loss_func(output, labelb))
-                for j in range(num_updates - 1):
+                for j in range(num_updates - 1):  # inner loop
                     loss = self.loss_func(self.forward(inputa, fast_weights, reuse=True), labela)
                     grads = tf.gradients(loss, list(fast_weights.values()))
                     if FLAGS.stop_grad:
@@ -97,7 +98,7 @@ class MAML:
             self.total_losses2 = total_losses2 = [tf.reduce_sum(lossesb[j]) / tf.to_float(FLAGS.meta_batch_size) for j in range(num_updates)]
             # after the map_fn
             self.outputas, self.outputbs = outputas, outputbs
-            self.pretrain_op = tf.train.AdamOptimizer(self.meta_lr).minimize(total_loss1)
+            self.pretrain_op = tf.train.AdamOptimizer(self.meta_lr).minimize(total_loss1)  # outloop
 
             if FLAGS.metatrain_iterations > 0:
                 optimizer = tf.train.AdamOptimizer(self.meta_lr)

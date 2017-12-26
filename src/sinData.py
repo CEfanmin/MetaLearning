@@ -33,3 +33,4 @@ class DataGenerator(object):
                 outputs[func] = amp[func] * np.sin(init_inputs[func]-phase[func])
             return init_inputs, outputs, amp, phase
 
+
