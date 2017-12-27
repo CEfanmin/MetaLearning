@@ -69,7 +69,7 @@ class MAML:
                 output = self.forward(inputb, fast_weights, reuse=True)
                 task_outputbs.append(output)
                 task_lossesb.append(self.loss_func(output, labelb))
-                for j in range(num_updates - 1):  # inner loop
+                for j in range(num_updates - 1):  # num_updates is Gradient Steps
                     loss = self.loss_func(self.forward(inputa, fast_weights, reuse=True), labela)
                     grads = tf.gradients(loss, list(fast_weights.values()))
                     if FLAGS.stop_grad:

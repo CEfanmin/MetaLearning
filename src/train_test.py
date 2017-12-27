@@ -20,7 +20,6 @@ def train(model, saver, sess, exp_string, data_generator, resume_itr=0):
     print('Done initializing, starting training.')
     prelosses, postlosses = [], []
     preX,postX,Y= [], [], []
-
     num_classes = 1 
 
     for itr in range(resume_itr, FLAGS.pretrain_iterations + FLAGS.metatrain_iterations):
@@ -51,55 +50,37 @@ def train(model, saver, sess, exp_string, data_generator, resume_itr=0):
         result = sess.run(input_tensors, feed_dict)
 
         if itr % SUMMARY_INTERVAL == 0:
-            prelosses.append(result[-2])
+            prelosses.append(result[-2])  # prelosses is total_loss1 
             if FLAGS.log:
                 train_writer.add_summary(result[1], itr)
-            postlosses.append(result[-1])
+            postlosses.append(result[-1])   # postlosses is total_losses2 
 
         if (itr!=0) and itr % PRINT_INTERVAL == 0:
             if itr < FLAGS.pretrain_iterations:
                 print_str = 'Pretrain Iteration ' + str(itr)
             else:
-                print_str = 'Final Iteration ' + str(itr - FLAGS.pretrain_iterations)
+                print_str = 'Iteration ' + str(itr - FLAGS.pretrain_iterations)
             print_str += ': ' + str(np.mean(prelosses)) + ', ' + str(np.mean(postlosses))
             print(print_str)
             preX.append(np.mean(prelosses))
             postX.append(np.mean(postlosses))
             Y.append(itr)
-            # prelosses, postlosses = [], []
 
         if (itr!=0) and itr % SAVE_INTERVAL == 0:
             saver.save(sess, FLAGS.logdir + '/' + exp_string + '/model' + str(itr))
 
-        # sinusoid is infinite data, so no need to test on meta-validation set.
-        if (itr!=0) and itr % TEST_PRINT_INTERVAL == 0 and FLAGS.datasource !='sinusoid':
-            if 'generate' not in dir(data_generator):
-                feed_dict = {}
-                input_tensors = [model.metaval_total_loss1, model.metaval_total_losses2[FLAGS.num_updates-1], model.summ_op]
-            else:
-                batch_x, batch_y, amp, phase = data_generator.generate()
-                inputa = batch_x[:, :num_classes*FLAGS.update_batch_size, :]
-                inputb = batch_x[:, num_classes*FLAGS.update_batch_size:, :]
-                labela = batch_y[:, :num_classes*FLAGS.update_batch_size, :]
-                labelb = batch_y[:, num_classes*FLAGS.update_batch_size:, :]
-                feed_dict = {model.inputa: inputa, model.inputb: inputb,  model.labela: labela, model.labelb: labelb, model.meta_lr: 0.0}
-                input_tensors = [model.total_loss1, model.total_losses2[FLAGS.num_updates-1]]
-
-            result = sess.run(input_tensors, feed_dict)
-            print('Validation results: ' + str(result[0]) + ', ' + str(result[1]))
-
-    # plot mean square error
+    saver.save(sess, FLAGS.logdir + '/' + exp_string +  '/model' + str(itr))
+    # plot training process mean square error curve
     import matplotlib.pyplot as plt
     plt.figure()
     plt.plot(Y, preX, 'b', label="preLoss")
     plt.plot(Y, postX,'g',label="postLoss")
-    plt.title("pre and post label")
+    plt.title("pre and post loss of trainning process")
     plt.legend(loc='upper right')
     plt.xlabel("numbers of iteration")
     plt.ylabel("MSE")
     plt.show()
-
-    saver.save(sess, FLAGS.logdir + '/' + exp_string +  '/model' + str(itr))
+    
 
 NUM_TEST_POINTS = 600
 def test(model, saver, sess, exp_string, data_generator, test_num_updates=None):
@@ -107,7 +88,6 @@ def test(model, saver, sess, exp_string, data_generator, test_num_updates=None):
     np.random.seed(1)
     random.seed(1)
     metaval_accuracies = []
-
     for _ in range(NUM_TEST_POINTS):
         if 'generate' not in dir(data_generator):
             feed_dict = {}
@@ -125,10 +105,11 @@ def test(model, saver, sess, exp_string, data_generator, test_num_updates=None):
             labelb = batch_y[:,num_classes*FLAGS.update_batch_size:, :]
 
             feed_dict = {model.inputa: inputa, model.inputb: inputb,  model.labela: labela, model.labelb: labelb, model.meta_lr: 0.0}
-            result = sess.run([model.total_loss1] +  model.total_losses2, feed_dict)
+            result = sess.run([model.total_loss1]+model.total_losses2, feed_dict)
 
         metaval_accuracies.append(result)
-        
+    
+    print("result is: ", result)
     metaval_accuracies = np.array(metaval_accuracies)
     means = np.mean(metaval_accuracies, 0)
     stds = np.std(metaval_accuracies, 0)

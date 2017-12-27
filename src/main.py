@@ -23,7 +23,7 @@ flags.DEFINE_integer('metatrain_iterations', 15000, 'number of metatraining iter
 flags.DEFINE_integer('meta_batch_size', 25, 'number of tasks sampled per meta-update')
 flags.DEFINE_float('meta_lr', 0.001, 'the base learning rate of the generator')
 flags.DEFINE_integer('update_batch_size', 5, 'number of examples used for inner gradient update (K for K-shot learning).')
-flags.DEFINE_float('update_lr', 1e-3, 'step size alpha for inner gradient update.')
+flags.DEFINE_float('update_lr', 0.001, 'step size alpha for inner gradient update.')
 flags.DEFINE_integer('num_updates', 1, 'number of inner gradient updates during training.')
 
 ## Model options
@@ -94,7 +94,6 @@ def main():
 
     resume_itr = 0
     model_file = None
-
     tf.global_variables_initializer().run()
     tf.train.start_queue_runners()
     print("exp_string is: ", exp_string)
@@ -115,7 +114,6 @@ def main():
         test(model, saver, sess, exp_string, data_generator, test_num_updates)
 
     sin_test(model, saver, sess, exp_string, data_generator, test_num_updates)
-
 
 
 if __name__ == "__main__":

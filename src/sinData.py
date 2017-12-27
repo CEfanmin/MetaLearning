@@ -29,8 +29,9 @@ class DataGenerator(object):
             for func in range(self.batch_size):
                 init_inputs[func] = np.random.uniform(self.input_range[0], self.input_range[1], [self.num_samples_per_class, 1])
                 if input_idx is not None:
+                    # print("input_idx is: ", input_idx)
                     init_inputs[:,input_idx:,0] = np.linspace(self.input_range[0], self.input_range[1], num=self.num_samples_per_class-input_idx, retstep=False)
                 outputs[func] = amp[func] * np.sin(init_inputs[func]-phase[func])
             return init_inputs, outputs, amp, phase
 
-
+        
