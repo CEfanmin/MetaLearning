@@ -26,21 +26,21 @@ Good initialization of parameters means that it can achieve good performance on 
 
     evaluation error with MAML
 
-   ![multi](./evaluation error with MAML.png "evaluation error with MAML")
+![multi](./evaluation error with MAML.png "evaluation error with MAML")
 
     evaluation error with no MAML
 
-   ![multi](./evaluation error with no MAML.png "evaluation error with no MAML")
+![multi](./evaluation error with no MAML.png "evaluation error with no MAML")
 
 使用sin函数进行模型的测试发现结果如下。
 
     sin test with MAML
 
-   ![multi](./sin test with MAML.png "sin test with MAML")
+![multi](./sin test with MAML.png "sin test with MAML")
 
    	sin test with no MAML
 
-   ![multi](./sin test with no MAML.png "sin test with no MAML")
+![multi](./sin test with no MAML.png "sin test with no MAML")
 
 ## 3、结论
 
