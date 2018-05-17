@@ -8,7 +8,7 @@ import random
 def sin_test(model, saver, sess, exp_string, data_generator, test_num_updates=None):
     # load ground truth   
     x = np.arange(-5.0, 5.0, 0.01)
-    y = np.sin(x)
+    y = 3*np.sin(x- (1/5)*np.pi)+1  # any amplitude and phase
     
     num_classes = 1 
     np.random.seed(1)    
@@ -35,14 +35,3 @@ def sin_test(model, saver, sess, exp_string, data_generator, test_num_updates=No
     plt.plot(x, pre_update, 'y--',label="pre-update")
     plt.legend(loc="upper right")
     plt.show()
-
-    ## pretrained and pre-update
-    # result = sess.run(model.outputas, feed_dict)
-    # pre_update.extend(np.array(result).reshape(len(x),1))
-    # plt.figure()
-    # plt.title("test the model with no MAML")
-    # plt.plot(x, y, 'r-', label="ground truth")
-    # plt.plot(x, pre_update, 'y--',label="pre-update" )
-    # plt.legend(loc="upper right")
-    # plt.show()
-
